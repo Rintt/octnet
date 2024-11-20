@@ -22,10 +22,13 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# cython: language_level=3
 
 cimport cython
 import numpy as np
 cimport numpy as np
+cimport numpy as cnp
+from numpy cimport PyArray_SetBaseObject
 
 from libc.stdlib cimport free, malloc
 from libcpp cimport bool
@@ -38,7 +41,7 @@ np.import_array()
 """
 Lightweight wrapper class for native float arrays. Allows numpy style access.
 """
-cdef class FloatArrayWrapper:
+cdef class FloatArrayWrapper(object):
   """ native float array that is encapsulated. """
   cdef float* data_ptr
   """ size/length of the float array. """
@@ -302,12 +305,12 @@ cdef class Octree:
     cdef FloatArrayWrapper wrapper = FloatArrayWrapper()
     wrapper.set_data(self.grid.data, self.grid.n_leafs * self.grid.feature_size, 0)
     cdef np.ndarray array = np.array(wrapper, copy=False)
-    array.base = <PyObject*> wrapper
-    Py_INCREF(wrapper)
+    cdef np.ndarray[cnp.float32_t, ndim=1] c_array = array
+    PyArray_SetBaseObject(c_array, wrapper)
 
     if grid_idx is not None and bit_idx is not None:
-      didx = self.data_idx(grid_idx, bit_idx)
-      array = array[didx : didx + self.feature_size()]
+        didx = self.data_idx(grid_idx, bit_idx)
+        array = array[didx : didx + self.feature_size()]
     return array
 
   """

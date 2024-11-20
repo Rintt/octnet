@@ -29,14 +29,17 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy as np
 import platform
+import sys 
 
 extra_compile_args = ['-msse', '-msse2', '-msse3', '-msse4.2']
 extra_link_args = []
-if 'Linux' in platform.system():
-  print('Added OpenMP')
-  extra_compile_args.append('-fopenmp')
-  extra_link_args.append('-fopenmp')
-
+if sys.platform == 'win32':
+    # For MSVC, you can add appropriate flags or leave empty
+  extra_compile_args = ['/O2', '/openmp']
+elif 'Linux' in platform.system():
+    print('Added OpenMP')
+    extra_compile_args = ['-fopenmp', '-msse', '-msse2', '-msse3', '-msse4.2']
+    extra_link_args = ['-fopenmp']
 setup(
   name="pyoctnet",
   cmdclass= {'build_ext': build_ext},
